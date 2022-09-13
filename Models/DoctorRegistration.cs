@@ -6,12 +6,12 @@ namespace HospitalAPI.Models
 {
     public partial class DoctorRegistration
     {
-        public DoctorRegistration()
-        {
-            AppointmentBookings = new HashSet<AppointmentBooking>();
-        }
+        //public DoctorRegistration()
+        //{
+        //    AppointmentBookings = new HashSet<AppointmentBooking>();
+        //}
 
-        public string DoctorId { get; set; } = null!;
+        public string DoctorId { get; set; } 
         public string? DoctorName { get; set; }
         public string? Qualification { get; set; }
         public int? SpecializationId { get; set; }
@@ -24,6 +24,6 @@ namespace HospitalAPI.Models
         public string? EndTime { get; set; }
 
         public virtual Specialization? Specialization { get; set; }
-        public virtual ICollection<AppointmentBooking> AppointmentBookings { get; set; }
+        public virtual ICollection<AppointmentBooking>? AppointmentBookings { get; set; }
     }
 }

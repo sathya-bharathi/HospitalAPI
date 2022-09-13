@@ -26,7 +26,7 @@ namespace HospitalAPI.Controllers
                 {
                     return BadRequest("Invalid Credential");
                 }
-                return Accepted();
+                return Admin;
             }
             catch (Exception)
             {

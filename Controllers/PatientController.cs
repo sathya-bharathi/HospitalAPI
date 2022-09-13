@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace HospitalAPI.Controllers
 {
@@ -43,7 +44,7 @@ namespace HospitalAPI.Controllers
                 {
                     return BadRequest("Invalid Credential");
                 }
-                return Accepted();
+                return patient;
             }
             catch (Exception)
             {
@@ -85,6 +86,45 @@ namespace HospitalAPI.Controllers
                 return NotFound();
             }
             return patient;
+        }
+        [HttpGet]
+        [Route("Details")]
+        public async Task<ActionResult<IEnumerable<PatientRegistration>>> GetDetails()
+        {
+            return await db.PatientRegistrations.ToListAsync();
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Updatedetails(string id, PatientRegistration patient)
+        {
+            if (id != patient.PatientId)
+            {
+                return BadRequest();
+            }
+
+            db.Entry(patient).State = EntityState.Modified;
+            try
+            {
+
+                await db.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!PatientRegistrationExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+            return Ok(patient);
+        }
+
+        private bool PatientRegistrationExists(string id)
+        {
+            return db.PatientRegistrations.Any(e => e.PatientId == id);
         }
 
     }

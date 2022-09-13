@@ -13,6 +13,6 @@ namespace HospitalAPI.Models
         public int SpecializationId { get; set; }
         public string? SpecializationName { get; set; }
 
-        public virtual ICollection<DoctorRegistration> DoctorRegistrations { get; set; }
+        public virtual ICollection<DoctorRegistration>? DoctorRegistrations { get; set; }
     }
 }
