@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using HospitalAPI.Repository;
+using HospitalAPI.Token;
 
 namespace HospitalAPI.Controllers
 {
@@ -10,122 +12,74 @@ namespace HospitalAPI.Controllers
     [ApiController]
     public class PatientController : ControllerBase
     {
-        private readonly HMSDbContext db;
-        public PatientController(HMSDbContext db)
+        private readonly IPatient db;
+        public PatientController(IPatient db)
         {
             this.db = db;
         }
         [HttpPost]
         [Route("Registration")]
-        public async Task<ActionResult<PatientRegistration>> Registration(PatientRegistration a)
+        public async Task<ActionResult<PatientRegistration>> Registration(PatientRegistration patient)
         {
-            try
-            {
-                await db.PatientRegistrations.AddAsync(a);
-                await db.SaveChangesAsync();
-                return Ok(a);
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    "Error creating new Patient Record");
-            }
+            db.Registration(patient);
+            return patient;
         }
         [HttpPost]
         [Route("Login")]
-        public async Task<ActionResult<PatientRegistration>> Login(PatientRegistration a)
+        public async Task<ActionResult<PatientToken>> Login(PatientRegistration Patient)
         {
-            try
+
+            var ans = await db.Login(Patient);
+            if (ans == null)
             {
-                var patient = (from i in db.PatientRegistrations
-                               where i.PatientId == a.PatientId && i.Password == a.Password
-                               select i).SingleOrDefault();
-                if (patient == null)
-                {
-                    return BadRequest("Invalid Credential");
-                }
-                return patient;
+                return BadRequest();
             }
-            catch (Exception)
+            else
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                   "Wrong Entry");
+                return Ok(ans);
             }
         }
+
         [HttpPost]
         [Route("BookAppointment")]
-        public ActionResult<AppointmentBooking> BookAppointment(AppointmentBooking appointment)
+        public ActionResult<AppointmentBooking> AppointmentBook(AppointmentBooking appointment)
         {
-            db.Add(appointment);
-            db.SaveChanges();
+            db.BookAppointment(appointment);
             return appointment;
         }
 
         [HttpGet]
         [Route("DoctorId")]
-        
-        public ActionResult<DoctorRegistration> GetDoctordetail(string DoctorId)
+
+        public async Task<ActionResult<DoctorRegistration>> GetDoctordetail(string DoctorId)
 
         {
-            var doctor = db.DoctorRegistrations.Find(DoctorId);
-            if(doctor==null)
-            {
-                return NotFound();
-            }
-            return doctor;
+            return await db.GetDoctordetail(DoctorId);
         }
         [HttpGet]
         [Route("PatientId")]
 
-        public ActionResult<PatientRegistration> GetPatientdetail(string PatientId)
+        public async Task<ActionResult<PatientRegistration>> GetPatientdetail(string PatientId)
 
         {
-            var patient = db.PatientRegistrations.Find(PatientId);
-            if (patient == null)
-            {
-                return NotFound();
-            }
-            return patient;
+            return await db.GetPatientdetail(PatientId);
         }
         [HttpGet]
         [Route("Details")]
-        public async Task<ActionResult<IEnumerable<PatientRegistration>>> GetDetails()
+        public async Task<ActionResult<List<PatientRegistration>>> Getdetails()
         {
-            return await db.PatientRegistrations.ToListAsync();
+            return await db.GetDetails();
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Updatedetails(string id, PatientRegistration patient)
+        public async Task<IActionResult> Updatedetails(PatientRegistration patient)
         {
-            if (id != patient.PatientId)
-            {
-                return BadRequest();
-            }
-
-            db.Entry(patient).State = EntityState.Modified;
-            try
-            {
-
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PatientRegistrationExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await db.Updatedetails(patient);
             return Ok(patient);
         }
-
-        private bool PatientRegistrationExists(string id)
-        {
-            return db.PatientRegistrations.Any(e => e.PatientId == id);
-        }
-
     }
 }
+
+       
+
+    

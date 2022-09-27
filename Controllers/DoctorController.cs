@@ -1,7 +1,12 @@
 ﻿using HospitalAPI.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Http;
+using HospitalAPI.Repository;
+using HospitalAPI.Token;
 
 namespace HospitalAPI.Controllers
 {
@@ -9,99 +14,56 @@ namespace HospitalAPI.Controllers
     [ApiController]
     public class DoctorController : ControllerBase
     {
-        private readonly HMSDbContext db;
-        public DoctorController(HMSDbContext db)
+        private readonly IDoctor db;
+        public DoctorController(IDoctor db)
         {
             this.db = db;
         }
         [HttpPost]
         [Route("Login")]
-        public async Task<ActionResult<DoctorRegistration>> Login(DoctorRegistration a)
+        public async Task<ActionResult<DoctorToken>> Login(DoctorRegistration doctor)
         {
-            try
+            var ans = await db.Login(doctor);
+            if (ans == null)
             {
-                var Doctor = (from i in db.DoctorRegistrations
-                             where i.DoctorId == a.DoctorId && i.Password == a.Password
-                             select i).SingleOrDefault();
-                if (Doctor == null)
-                {
-                    return BadRequest("Invalid Credential");
-                }
-                return Doctor;
+                return BadRequest();
             }
-            catch (Exception)
+            else
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                   "Wrong Entry");
+                return Ok(ans);
             }
         }
         [HttpGet]
         [Route("Details")]
-        public async Task<ActionResult<IEnumerable<DoctorRegistration>>> GetDetails()
+        public async Task<ActionResult<List<DoctorRegistration>>> Getdetails()
         {
-            return await db.DoctorRegistrations.Include(x=>x.Specialization).ToListAsync();
+            return await db.GetDetails();
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> Updatedetails(string id, DoctorRegistration doctor)
+        public async Task<IActionResult> Updatedetails( DoctorRegistration doctor)
         {
-            if (id != doctor.DoctorId)
-            {
-                return BadRequest();
-            }
-
-            db.Entry(doctor).State = EntityState.Modified;
-            try
-            {
-
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!DoctorRegistrationExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            await db.UpdateDetails(doctor);
             return Ok(doctor);
         }
 
-        private bool DoctorRegistrationExists(string id)
-        {
-            return db.DoctorRegistrations.Include(x=>x.Specialization).Any(e => e.DoctorId == id);
-        }
+       
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteDoctor(string id)
         {
-            var doctor = await db.DoctorRegistrations.FindAsync(id);
-            if (doctor == null)
-            {
-                return NotFound();
-            }
-
-            db.DoctorRegistrations.Remove(doctor);
-            await db.SaveChangesAsync();
-
+            db.DeleteDoctor(id);
             return NoContent();
         }
         [HttpGet]
         [Route("DoctorId")]
 
-        public ActionResult<DoctorRegistration> GetDoctor(string DoctorId)
-
+        public async Task<ActionResult<DoctorRegistration>> GetDoctor(string id)
         {
-            //var doctor = db.DoctorRegistrations.Include(x=>x.Specialization).Find(DoctorId);
-            var doctor = (from i in db.DoctorRegistrations.Include(x => x.Specialization) where i.DoctorId == DoctorId select i).SingleOrDefault();
-            if (doctor == null)
-            {
-                return NotFound();
-            }
-            return doctor;
+            return await db.GetDetails(id);  
         }
-       
+      
+
     }
+  
+
 }
 

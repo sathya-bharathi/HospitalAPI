@@ -1,10 +1,9 @@
 ﻿using HospitalAPI.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using HospitalAPI.Repository;
 
 namespace HospitalAPI.Controllers
 {
@@ -12,8 +11,8 @@ namespace HospitalAPI.Controllers
     [ApiController]
     public class SpecializationController : ControllerBase
     {
-        private readonly HMSDbContext db;
-        public SpecializationController (HMSDbContext db)
+        private readonly ISpecialization db;
+        public SpecializationController (ISpecialization db)
         {
             this.db = db;
         }
@@ -21,74 +20,42 @@ namespace HospitalAPI.Controllers
         [Route("Specialization")]
         public async Task<ActionResult<IEnumerable<Specialization>>> GetSpecializations()
         {
-            return await db.Specializations.ToListAsync();
+            return await db.GetSpecializations();
         }
         [HttpPost]
         public async Task<ActionResult<Specialization>> AddSpecialization(Specialization specialization)
         {
-            db.Specializations.Add(specialization);
-            await db.SaveChangesAsync();
-
-            return CreatedAtAction("GetSpecialization", new { id = specialization.SpecializationId }, specialization);
-        }
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateSpecialization(int id, Specialization specialization)
-        {
-            if (id != specialization.SpecializationId)
+           if (await db.AddSpecialization(specialization)==null)
             {
                 return BadRequest();
-            }
 
-            db.Entry(specialization).State = EntityState.Modified;
-            try
-            {
-
-                await db.SaveChangesAsync();
             }
-            catch (DbUpdateConcurrencyException)
+            else
             {
-                if (!SpecializationExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
+                return CreatedAtAction("GetSpecializations", new { id = specialization.SpecializationId }, specialization);
             }
-            return Ok(specialization);
         }
-
-        private bool SpecializationExists(int id)
+        [HttpPut("{id}")]
+        public async Task<Specialization> UpdateSpecialization(int id, Specialization specialization)
         {
-            return db.Specializations.Any(e => e.SpecializationId == id);
+            await db.UpdateSpecialization(specialization);
+            return specialization;
         }
+
+      
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteSpecialization(int id)
         {
-            var specialization = await db.Specializations.FindAsync(id);
-            if (specialization == null)
-            {
-                return NotFound();
-            }
-
-            db.Specializations.Remove(specialization);
-            await db.SaveChangesAsync();
-
+            db.DeleteSpecialization(id);
             return NoContent();
         }
         [HttpGet]
         [Route("SpecializationId")]
 
-        public ActionResult<Specialization> GetSpecialization(int SpecializationId)
+        public async Task<Specialization> GetSpecialization(int SpecializationId)
 
         {
-            var specialization = db.Specializations.Find(SpecializationId);
-            if (specialization == null)
-            {
-                return NotFound();
-            }
-            return specialization;
+            return await db.GetSpecialization(SpecializationId);
         }
     }
 }

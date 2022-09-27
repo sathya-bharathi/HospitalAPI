@@ -1,49 +1,51 @@
 ﻿using HospitalAPI.Models;
+using HospitalAPI.Repository;
+using HospitalAPI.Token;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace HospitalAPI.Controllers
 {
+    
     [Route("api/[controller]")]
     [ApiController]
     public class AdminController : ControllerBase
     {
-        private readonly HMSDbContext db;
-        public AdminController(HMSDbContext db)
+        private readonly IAdmin db;
+        public AdminController(IAdmin db)
         {
             this.db = db;
         }
+      
         [HttpPost]
         [Route("Login")]
-        public async Task<ActionResult<Admin>> Login(Admin a)
+        public async Task<ActionResult<AdminToken>> Login(Admin admin)
         {
-            try
+           var ans = await db.Login(admin);
+           if(ans==null)
             {
-                var Admin = (from i in db.Admins
-                             where i.AdminId == a.AdminId && i.Password == a.Password
-                             select i).SingleOrDefault();
-                if (Admin == null)
-                {
-                    return BadRequest("Invalid Credential");
-                }
-                return Admin;
+                return BadRequest();
             }
-            catch (Exception)
+            else
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                   "Wrong Entry");
+                return Ok(ans);
             }
-        } 
+        }
         [HttpPost]
         [Route("Registration")]
-        public ActionResult <DoctorRegistration> Registration(DoctorRegistration doctor)
+        public ActionResult<DoctorRegistration> Register(DoctorRegistration doctor)
         {
-            db.Add(doctor);
-            db.SaveChanges();
+            db.Register(doctor);
             return doctor;
         }
-        
 
     }
 }
+
+
 

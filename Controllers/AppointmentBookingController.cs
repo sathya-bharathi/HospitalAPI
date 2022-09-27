@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using HospitalAPI.Repository;
 
 namespace HospitalAPI.Controllers
 {
@@ -9,34 +10,29 @@ namespace HospitalAPI.Controllers
     [ApiController]
     public class AppointmentBookingController : ControllerBase
     {
-        private readonly HMSDbContext db;
-        public AppointmentBookingController(HMSDbContext db)
+        private readonly IAppointmentBooking db;
+        public AppointmentBookingController(IAppointmentBooking db)
         {
             this.db = db;
         }
         [HttpGet]
         [Route("Details")]
-        public async Task<ActionResult<IEnumerable<AppointmentBooking>>> GetDetails()
+        public async Task<ActionResult<List<AppointmentBooking>>> GetDetails()
         {
-            return await db.AppointmentBookings.Include(x => x.Doctor)
-                .Include(x=>x.Patient).ToListAsync();
+            return await db.GetDetails();
         }
         [HttpGet]
         [Route("DoctorId")]
-        public ActionResult<List<AppointmentBooking>> GetAppointmentDetails(string DoctorId)
+        public async Task<List<AppointmentBooking>> GetAppointmentDetails(string DoctorId)
         {
-            var appointment = (from i in db.AppointmentBookings where i.DoctorId == DoctorId select i).Include(x => x.Doctor)
-                .Include(x => x.Patient).ToList();
-            return appointment;
+            return await db.GetAppointmentDetails(DoctorId);
         }
 
         [HttpGet]
         [Route("PatientId")]
-        public ActionResult<List<AppointmentBooking>> AppointmentDetails(string PatientId)
+        public async Task<List<AppointmentBooking>> AppointmentDetails(string PatientId)
         {
-            var appointment = (from i in db.AppointmentBookings where i.PatientId == PatientId select i).Include(x => x.Doctor)
-                .Include(x => x.Patient).ToList();
-            return appointment;
+            return await db.AppointmentDetails(PatientId);
         }
 
     }
