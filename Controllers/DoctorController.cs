@@ -40,7 +40,7 @@ namespace HospitalAPI.Controllers
             return await db.GetDetails();
         }
         [HttpPut("{id}")]
-        public async Task<IActionResult> Updatedetails( DoctorRegistration doctor)
+        public async Task<IActionResult> Updatedetails(DoctorRegistration doctor)
         {
             await db.UpdateDetails(doctor);
             return Ok(doctor);

@@ -8,11 +8,11 @@ using System.Text;
 
 namespace HospitalAPI.Repository
 {
-    public class AdminRepo : IAdmin
+    public class AdminRepository : IAdmin
     {
         private readonly HMSDbContext db;
         private readonly IConfiguration _configuration;
-        public AdminRepo(HMSDbContext db, IConfiguration configuration)
+        public AdminRepository(HMSDbContext db, IConfiguration configuration)
         {
            this.db=db;
             _configuration = configuration;

@@ -11,7 +11,7 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddScoped<IAdmin, AdminRepo>();
+builder.Services.AddScoped<IAdmin, AdminRepository>();
 builder.Services.AddScoped<IDoctor, DoctorRepo>();
 builder.Services.AddScoped<IPatient, PatientRepo>();
 builder.Services.AddScoped<IAppointmentBooking, AppointmentBookingRepo>();
